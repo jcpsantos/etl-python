@@ -19,10 +19,16 @@ def union_all(*dfs, fill_by=None):
         
     return union
 
-def groupby_count(df, *cols, order="count"):
-    if order != "count" or order not in list(cols):
+def groupby_count(df, *cols, order="count", desc=True):
+    order_columns = list(cols)
+    order_columns.extend(['count'])
+    if order not in list(order_columns):
         raise ValueError("Oops! Column name isn't a valid name. The order parameter \
                   must have the name of the count \
                   column or one of the columns of the cols parameter..  Try again...")
+    if desc:
+        group = df.groupby(list(cols)).count().orderBy(F.col(order).desc())
+    else:
+        group = df.groupby(list(cols)).count().orderBy(F.col(order))
                   
-    return df.groupby(list(cols)).count().orderBy(F.col(order).desc())
+    return group
