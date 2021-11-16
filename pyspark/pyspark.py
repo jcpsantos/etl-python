@@ -20,15 +20,22 @@ def union_all(*dfs, fill_by=None):
     return union
 
 def groupby_count(df, *cols, order="count", desc=True):
-    order_columns = list(cols)
-    order_columns.extend(['count'])
-    if order not in list(order_columns):
-        raise ValueError("Oops! Column name isn't a valid name. The order parameter \
-                  must have the name of the count \
-                  column or one of the columns of the cols parameter..  Try again...")
+    list_columns = df.columns
+    list_columns.append("count")
+    for col in list(cols):
+        if col not in list_columns or order not in list_columns:
+            raise ValueError("Oops! Column name isn't a valid name. The order parameter must have the name of the count column or one of the columns of the cols parameter..  Try again...")
     if desc:
         group = df.groupby(list(cols)).count().orderBy(F.col(order).desc())
     else:
         group = df.groupby(list(cols)).count().orderBy(F.col(order))
                   
     return group
+
+def groupby_avg(df, *groupby_cols, avg_col):
+    for col in list(groupby_cols):
+        if col not in df.columns or avg_col not in df.columns:
+            raise ValueError("Oops! Column name is not a valid name. The column name must be in the dataframe... Try again...")
+    avg = df.groupBy(list(groupby_cols)).agg(F.avg(F.col(avg_col)).alias("avg_" + avg_col))
+
+    return avg
