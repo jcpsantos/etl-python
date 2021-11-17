@@ -19,23 +19,26 @@ def union_all(*dfs, fill_by=None):
         
     return union
 
-def groupby_count(df, *cols, order="count", desc=True):
+def count_columns(df, *cols, order="count", desc=True):
     list_columns = df.columns
     list_columns.append("count")
     for col in list(cols):
         if col not in list_columns or order not in list_columns:
             raise ValueError("Oops! Column name isn't a valid name. The order parameter must have the name of the count column or one of the columns of the cols parameter..  Try again...")
     if desc:
-        group = df.groupby(list(cols)).count().orderBy(F.col(order).desc())
+        win = Window.partitionBy(list(cols))
+        group = df.withColumn('count', F.count(F.lit(1)).over(win))
     else:
-        group = df.groupby(list(cols)).count().orderBy(F.col(order))
+        win = Window.partitionBy(list(cols))
+        group = df.withColumn('count', F.count(F.lit(1)).over(win)).orderBy(F.col(order))
                   
     return group
 
-def groupby_avg(df, *groupby_cols, avg_col):
-    for col in list(groupby_cols):
+def avg_column(df, *cols, avg_col):
+    for col in list(cols):
         if col not in df.columns or avg_col not in df.columns:
             raise ValueError("Oops! Column name is not a valid name. The column name must be in the dataframe... Try again...")
-    avg = df.groupBy(list(groupby_cols)).agg(F.avg(F.col(avg_col)).alias("avg_" + avg_col))
+    win = Window.partitionBy(list(cols))
+    avg = df.withColumn("avg_" + avg_col, F.mean(F.col(avg_col)).over(win))
 
     return avg
